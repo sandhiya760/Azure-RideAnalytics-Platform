@@ -1,5 +1,4 @@
-@"
-trigger:
+﻿trigger:
   branches:
     include:
       - main
@@ -13,7 +12,7 @@ variables:
 steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '$(pythonVersion)'
+      versionSpec: '3.13'
     displayName: 'Set up Python'
 
   - script: |
@@ -24,4 +23,5 @@ steps:
   - script: |
       python -m pytest tests/ -v
     displayName: 'Run automated tests'
-"@ | Set-Content -Path azure-pipelines.yml -Encoding utf8
+
+
