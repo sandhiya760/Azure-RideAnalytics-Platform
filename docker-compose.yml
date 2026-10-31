@@ -1,0 +1,48 @@
+﻿services:
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.producer
+    env_file:
+      - .env
+    volumes:
+      - ride-data:/app/data
+    restart: unless-stopped
+
+  consumer:
+    environment:
+      EVENT_HUB_CONSUMER_GROUP: "$$Default"
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    env_file:
+      - .env
+    volumes:
+      - ride-data:/app/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    volumes:
+      - ride-data:/app/data
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    environment:
+      API_BASE_URL: http://api:5000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  ride-data:
+

@@ -1,4 +1,5 @@
-
+﻿
+import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -12,12 +13,12 @@ from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(
     page_title="Ride Analytics | Azure",
-    page_icon="🚘",
+    page_icon="ðŸš˜",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-API_BASE_URL = "http://127.0.0.1:5000"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:5000")
 REFRESH_INTERVAL = 5000
 
 
@@ -98,7 +99,7 @@ st.markdown("""
 
 with st.sidebar:
 
-    st.title("🚘 RideOps")
+    st.title("ðŸš˜ RideOps")
 
     st.caption("Azure-based transportation analytics")
 
@@ -325,7 +326,7 @@ if query.strip():
 
         st.success(
             "Matching metrics: "
-            + " · ".join(matches)
+            + " Â· ".join(matches)
         )
 
     else:
@@ -384,7 +385,7 @@ if page == "Overview":
 
     c3.metric(
         "Revenue",
-        f"₹{total_revenue:,.2f}"
+        f"â‚¹{total_revenue:,.2f}"
     )
 
     c4.metric(
@@ -459,7 +460,7 @@ if page == "Overview":
             color="city",
             labels={
                 "city": "City",
-                "revenue": "Revenue (₹)"
+                "revenue": "Revenue (â‚¹)"
             },
             template="plotly_white"
         )
@@ -497,7 +498,7 @@ elif page == "Ride Analytics":
 
     st.metric(
         "Average fare per completed ride",
-        f"₹{average_fare:,.2f}"
+        f"â‚¹{average_fare:,.2f}"
     )
 
     st.caption(
@@ -524,12 +525,12 @@ elif page == "Revenue":
 
     st.metric(
         "Total revenue",
-        f"₹{total_revenue:,.2f}"
+        f"â‚¹{total_revenue:,.2f}"
     )
 
     st.metric(
         "Average fare",
-        f"₹{average_fare:,.2f}"
+        f"â‚¹{average_fare:,.2f}"
     )
 
     if not filtered_cities.empty:
@@ -543,7 +544,7 @@ elif page == "Revenue":
             color="city",
             labels={
                 "city": "City",
-                "revenue": "Revenue (₹)"
+                "revenue": "Revenue (â‚¹)"
             },
             template="plotly_white"
         )
@@ -646,7 +647,9 @@ elif page == "Observability":
 st.divider()
 
 st.caption(
-    "RideOps · Streamlit dashboard · "
-    "Flask REST API · SQLite · "
+    "RideOps Â· Streamlit dashboard Â· "
+    "Flask REST API Â· SQLite Â· "
     "Auto-refresh: 5 seconds"
 )
+
+
