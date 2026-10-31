@@ -1,4 +1,4 @@
-@'
+@"
 trigger:
   branches:
     include:
@@ -24,4 +24,4 @@ steps:
   - script: |
       python -m pytest tests/ -v
     displayName: 'Run automated tests'
-'@ | Set-Content -Path azure-pipelines.yml -Encoding utf8
+"@ | Set-Content -Path azure-pipelines.yml -Encoding utf8
