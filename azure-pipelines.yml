@@ -1,13 +1,11 @@
-﻿trigger:
+﻿
+trigger:
   branches:
     include:
       - main
 
 pool:
   vmImage: 'ubuntu-latest'
-
-variables:
-  pythonVersion: '3.13'
 
 steps:
   - task: UsePythonVersion@0
@@ -24,4 +22,46 @@ steps:
       python -m pytest tests/ -v
     displayName: 'Run automated tests'
 
+  - task: Docker@2
+    displayName: 'Build and push API image'
+    inputs:
+      command: buildAndPush
+      containerRegistry: dockerhub-connection
+      repository: sandhiyadevops/rideanalytics-api
+      Dockerfile: Dockerfile.api
+      tags: |
+        latest
+        $(Build.BuildId)
 
+  - task: Docker@2
+    displayName: 'Build and push Producer image'
+    inputs:
+      command: buildAndPush
+      containerRegistry: dockerhub-connection
+      repository: sandhiyadevops/rideanalytics-producer
+      Dockerfile: Dockerfile.producer
+      tags: |
+        latest
+        $(Build.BuildId)
+
+  - task: Docker@2
+    displayName: 'Build and push Consumer image'
+    inputs:
+      command: buildAndPush
+      containerRegistry: dockerhub-connection
+      repository: sandhiyadevops/rideanalytics-consumer
+      Dockerfile: Dockerfile.consumer
+      tags: |
+        latest
+        $(Build.BuildId)
+
+  - task: Docker@2
+    displayName: 'Build and push Dashboard image'
+    inputs:
+      command: buildAndPush
+      containerRegistry: dockerhub-connection
+      repository: sandhiyadevops/rideanalytics-dashboard
+      Dockerfile: Dockerfile.dashboard
+      tags: |
+        latest
+        $(Build.BuildId)
