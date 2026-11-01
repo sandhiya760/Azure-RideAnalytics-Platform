@@ -65,3 +65,36 @@ steps:
       tags: |
         latest
         $(Build.BuildId)
+
+  - task: AzureCLI@2
+    displayName: 'Deploy RideAnalytics to AKS'
+    inputs:
+      azureSubscription: 'rideanalytics-azure-connection'
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        az aks get-credentials \
+          --resource-group rg-rideanalytics-dev \
+          --name rideanalytics-aks \
+          --admin \
+          --overwrite-existing
+
+        echo "Applying persistent storage..."
+        kubectl apply -f k8s/storage.yaml
+
+        echo "Applying application deployments..."
+        kubectl apply -f k8s/apps.yaml
+
+        echo "Waiting for deployments..."
+        kubectl rollout status deployment/rideanalytics-producer \
+          -n rideanalytics --timeout=300s
+
+        kubectl rollout status deployment/rideanalytics-backend \
+          -n rideanalytics --timeout=300s
+
+        kubectl rollout status deployment/rideanalytics-dashboard \
+          -n rideanalytics --timeout=300s
+
+        echo "Checking Kubernetes resources..."
+        kubectl get pods -n rideanalytics
+        kubectl get services -n rideanalytics
