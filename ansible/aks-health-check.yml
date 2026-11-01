@@ -1,0 +1,32 @@
+---
+- name: RideAnalytics AKS Health Check
+  hosts: local
+  gather_facts: false
+
+  tasks:
+    - name: Check AKS nodes
+      ansible.builtin.command: kubectl get nodes
+      register: node_status
+      changed_when: false
+
+    - name: Display node status
+      ansible.builtin.debug:
+        var: node_status.stdout_lines
+
+    - name: Check RideAnalytics pods
+      ansible.builtin.command: kubectl get pods -n rideanalytics
+      register: pod_status
+      changed_when: false
+
+    - name: Display pod status
+      ansible.builtin.debug:
+        var: pod_status.stdout_lines
+
+    - name: Check RideAnalytics services
+      ansible.builtin.command: kubectl get services -n rideanalytics
+      register: service_status
+      changed_when: false
+
+    - name: Display service status
+      ansible.builtin.debug:
+        var: service_status.stdout_lines
