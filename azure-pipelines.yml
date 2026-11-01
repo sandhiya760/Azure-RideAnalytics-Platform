@@ -1,4 +1,4 @@
-﻿
+
 trigger:
   branches:
     include:
@@ -8,20 +8,24 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+  # Python setup
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.13'
     displayName: 'Set up Python'
 
+  # Install dependencies
   - script: |
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
     displayName: 'Install Python dependencies'
 
+  # Run tests
   - script: |
       python -m pytest tests/ -v
     displayName: 'Run automated tests'
 
+  # Build and push API
   - task: Docker@2
     displayName: 'Build and push API image'
     inputs:
@@ -33,6 +37,7 @@ steps:
         latest
         $(Build.BuildId)
 
+  # Build and push Producer
   - task: Docker@2
     displayName: 'Build and push Producer image'
     inputs:
@@ -44,6 +49,7 @@ steps:
         latest
         $(Build.BuildId)
 
+  # Build and push Consumer
   - task: Docker@2
     displayName: 'Build and push Consumer image'
     inputs:
@@ -55,6 +61,7 @@ steps:
         latest
         $(Build.BuildId)
 
+  # Build and push Dashboard
   - task: Docker@2
     displayName: 'Build and push Dashboard image'
     inputs:
@@ -66,6 +73,7 @@ steps:
         latest
         $(Build.BuildId)
 
+  # Deploy everything to AKS
   - task: AzureCLI@2
     displayName: 'Deploy RideAnalytics to AKS'
     inputs:
@@ -85,7 +93,13 @@ steps:
         echo "Applying application deployments..."
         kubectl apply -f k8s/apps.yaml
 
-        echo "Waiting for deployments..."
+        echo "Deploying Prometheus..."
+        kubectl apply -f monitoring/prometheus/prometheus-deployment.yaml
+
+        echo "Deploying Grafana..."
+        kubectl apply -f monitoring/grafana/grafana-deployment.yaml
+
+        echo "Waiting for application deployments..."
         kubectl rollout status deployment/rideanalytics-producer \
           -n rideanalytics --timeout=300s
 
@@ -93,6 +107,13 @@ steps:
           -n rideanalytics --timeout=300s
 
         kubectl rollout status deployment/rideanalytics-dashboard \
+          -n rideanalytics --timeout=300s
+
+        echo "Waiting for monitoring deployments..."
+        kubectl rollout status deployment/prometheus \
+          -n rideanalytics --timeout=300s
+
+        kubectl rollout status deployment/grafana \
           -n rideanalytics --timeout=300s
 
         echo "Checking Kubernetes resources..."

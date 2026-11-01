@@ -1,0 +1,51 @@
+{
+  "uid": "rideanalytics",
+  "title": "RideAnalytics Platform",
+  "tags": ["rideanalytics", "azure", "observability"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total API Requests",
+      "type": "stat",
+      "gridPos": {"h": 5, "w": 8, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "sum(rideanalytics_api_requests_total)", "refId": "A"}]
+    },
+    {
+      "id": 2,
+      "title": "API Request Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 8, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "sum(rate(rideanalytics_api_requests_total[5m]))", "legendFormat": "Requests/sec", "refId": "A"}]
+    },
+    {
+      "id": 3,
+      "title": "Average API Latency",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "sum(rate(rideanalytics_api_request_duration_seconds_sum[5m])) / sum(rate(rideanalytics_api_request_duration_seconds_count[5m]))", "legendFormat": "Seconds", "refId": "A"}]
+    },
+    {
+      "id": 4,
+      "title": "API Requests by HTTP Status",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "sum by (http_status) (rate(rideanalytics_api_requests_total[5m]))", "legendFormat": "{{http_status}}", "refId": "A"}]
+    },
+    {
+      "id": 5,
+      "title": "Python Process Memory",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 13},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "process_resident_memory_bytes", "legendFormat": "Memory", "refId": "A"}]
+    }
+  ]
+}

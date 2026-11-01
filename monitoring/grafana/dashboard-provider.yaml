@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: RideAnalytics
+    orgId: 1
+    folder: RideAnalytics
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards/rideanalytics
