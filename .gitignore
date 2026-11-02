@@ -22,3 +22,18 @@ data/*.db
 
 # IDE files
 .vscode/
+src/dashboard/*.backup
+.env
+.env.*
+!.env.example
+
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+*.backup
+
+data/*.db
+
+__pycache__/
