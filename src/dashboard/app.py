@@ -1,4 +1,3 @@
-﻿
 import os
 import streamlit as st
 import pandas as pd
@@ -13,12 +12,18 @@ from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(
     page_title="Ride Analytics | Azure",
-    page_icon="ðŸš˜",
+    page_icon="🚗",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:5000")
+PROMETHEUS_URL = os.getenv(
+    "PROMETHEUS_URL",
+    "http://prometheus.rideanalytics.svc.cluster.local:9090"
+    if os.getenv("KUBERNETES_SERVICE_HOST")
+    else "http://127.0.0.1:9090"
+)
 REFRESH_INTERVAL = 5000
 
 
@@ -72,23 +77,116 @@ except requests.exceptions.RequestException as error:
 
 st.markdown("""
 <style>
+    :root {
+        --ride-blue: #2563eb;
+        --ride-blue-dark: #173b73;
+        --ride-surface: #ffffff;
+        --ride-muted: #64748b;
+    }
+
+    .stApp {
+        background: #f5f7fb;
+    }
 
     .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 2rem;
+        max-width: 1500px;
+        padding-top: 1.4rem;
+        padding-bottom: 2.5rem;
+    }
+
+    [data-testid="stSidebar"] {
+        background: #ffffff;
+        border-right: 1px solid #e5eaf2;
+    }
+
+    [data-testid="stSidebar"] > div:first-child {
+        padding-top: 1.4rem;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stRadio"] label {
+        padding: 0.38rem 0.55rem;
+        border-radius: 0.55rem;
     }
 
     [data-testid="stMetric"] {
-        background: var(--secondary-background-color);
-        padding: 18px;
-        border-radius: 12px;
-        border: 1px solid rgba(128,128,128,0.15);
+        background: #ffffff;
+        border: 1px solid #e6ebf3;
+        border-radius: 14px;
+        padding: 17px 18px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.035);
     }
 
-    div[data-testid="stSidebar"] {
-        border-right: 1px solid rgba(128,128,128,0.2);
+    [data-testid="stMetricLabel"] {
+        color: #64748b;
+        font-size: 0.86rem;
+        font-weight: 600;
     }
 
+    [data-testid="stMetricValue"] {
+        color: #172b4d;
+        font-weight: 700;
+    }
+
+    div[data-testid="stVerticalBlock"] div[data-testid="stPlotlyChart"],
+    div[data-testid="stDataFrame"] {
+        background: #ffffff;
+        border: 1px solid #e6ebf3;
+        border-radius: 13px;
+        padding: 0.25rem;
+    }
+
+    h1, h2, h3 {
+        color: #172b4d;
+        letter-spacing: -0.025em;
+    }
+
+    .ride-brand {
+        color: #173b73;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        margin-bottom: 0.1rem;
+    }
+
+    .ride-subtitle {
+        color: #64748b;
+        font-size: 0.84rem;
+        margin-bottom: 1.3rem;
+    }
+
+    .page-eyebrow {
+        color: #2563eb;
+        font-size: 0.76rem;
+        font-weight: 750;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+
+    .page-description {
+        color: #64748b;
+        font-size: 0.96rem;
+        margin-top: -0.45rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .section-heading {
+        color: #243b5a;
+        font-size: 1.08rem;
+        font-weight: 700;
+        margin: 0.4rem 0 0.7rem 0;
+    }
+
+    hr {
+        border-color: #e5eaf2 !important;
+    }
+
+    @media (max-width: 768px) {
+        .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -99,9 +197,11 @@ st.markdown("""
 
 with st.sidebar:
 
-    st.title("ðŸš˜ RideOps")
-
-    st.caption("Azure-based transportation analytics")
+    st.markdown('<div class="ride-brand">🚗 RideOps</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="ride-subtitle">TRANSPORT INTELLIGENCE PLATFORM</div>',
+        unsafe_allow_html=True
+    )
 
     page = st.radio(
         "NAVIGATION",
@@ -133,11 +233,17 @@ with st.sidebar:
 # 7. MAIN HEADER
 # ==================================================
 
-st.title("Transportation Analytics")
-
-st.caption(
-    "Event-driven ride insights and platform operations"
-)
+header_left, header_right = st.columns([4, 1])
+with header_left:
+    st.markdown('<div class="page-eyebrow">RIDEOPS · ANALYTICS WORKSPACE</div>', unsafe_allow_html=True)
+    st.title("Transportation Analytics")
+    st.markdown(
+        '<div class="page-description">Event-driven ride insights and platform operations</div>',
+        unsafe_allow_html=True
+    )
+with header_right:
+    st.caption("LIVE · AUTO REFRESH")
+    st.markdown("**Every 5 seconds**")
 
 
 if not api_connected:
@@ -326,7 +432,7 @@ if query.strip():
 
         st.success(
             "Matching metrics: "
-            + " Â· ".join(matches)
+            + " · ".join(matches)
         )
 
     else:
@@ -369,7 +475,9 @@ else:
 
 if page == "Overview":
 
-    st.subheader("Key performance indicators")
+    st.markdown('<div class="page-eyebrow">AT A GLANCE</div>', unsafe_allow_html=True)
+    st.subheader("Performance overview")
+    st.caption("A live snapshot of ride activity, revenue and service performance.")
 
     c1, c2, c3, c4 = st.columns(4)
 
@@ -385,7 +493,7 @@ if page == "Overview":
 
     c3.metric(
         "Revenue",
-        f"â‚¹{total_revenue:,.2f}"
+        f"₹{total_revenue:,.2f}"
     )
 
     c4.metric(
@@ -460,7 +568,7 @@ if page == "Overview":
             color="city",
             labels={
                 "city": "City",
-                "revenue": "Revenue (â‚¹)"
+                "revenue": "Revenue (₹)"
             },
             template="plotly_white"
         )
@@ -477,7 +585,9 @@ if page == "Overview":
 
 elif page == "Ride Analytics":
 
+    st.markdown('<div class="page-eyebrow">TRIP PERFORMANCE</div>', unsafe_allow_html=True)
     st.subheader("Ride analytics")
+    st.caption("Understand booking outcomes and completed ride performance.")
 
     c1, c2, c3 = st.columns(3)
 
@@ -498,7 +608,7 @@ elif page == "Ride Analytics":
 
     st.metric(
         "Average fare per completed ride",
-        f"â‚¹{average_fare:,.2f}"
+        f"₹{average_fare:,.2f}"
     )
 
     st.caption(
@@ -521,16 +631,18 @@ elif page == "Ride Analytics":
 
 elif page == "Revenue":
 
+    st.markdown('<div class="page-eyebrow">FINANCIAL PERFORMANCE</div>', unsafe_allow_html=True)
     st.subheader("Revenue analysis")
+    st.caption("Explore revenue contribution and average fare across cities.")
 
     st.metric(
         "Total revenue",
-        f"â‚¹{total_revenue:,.2f}"
+        f"₹{total_revenue:,.2f}"
     )
 
     st.metric(
         "Average fare",
-        f"â‚¹{average_fare:,.2f}"
+        f"₹{average_fare:,.2f}"
     )
 
     if not filtered_cities.empty:
@@ -544,7 +656,7 @@ elif page == "Revenue":
             color="city",
             labels={
                 "city": "City",
-                "revenue": "Revenue (â‚¹)"
+                "revenue": "Revenue (₹)"
             },
             template="plotly_white"
         )
@@ -571,7 +683,9 @@ elif page == "Revenue":
 
 elif page == "City Insights":
 
-    st.subheader("City-wise insights")
+    st.markdown('<div class="page-eyebrow">GEOGRAPHIC PERFORMANCE</div>', unsafe_allow_html=True)
+    st.subheader("City insights")
+    st.caption("Compare ride volume and revenue across operating cities.")
 
     if not filtered_cities.empty:
 
@@ -609,35 +723,123 @@ elif page == "City Insights":
 
 elif page == "Observability":
 
-    st.subheader("Platform observability")
+    st.markdown('<div class="page-eyebrow">PLATFORM HEALTH</div>', unsafe_allow_html=True)
+    st.subheader("Observability")
+    st.caption("Live application telemetry collected by Prometheus.")
 
-    st.info(
-        "Application telemetry has not been connected yet. "
-        "We will populate these metrics after instrumenting "
-        "Flask and configuring Prometheus."
-    )
+    def query_prometheus(promql):
+        response = requests.get(
+            f"{PROMETHEUS_URL}/api/v1/query",
+            params={"query": promql},
+            timeout=5
+        )
+        response.raise_for_status()
 
-    a, b, c = st.columns(3)
+        payload = response.json()
+        if payload.get("status") != "success":
+            raise ValueError("Prometheus returned an unsuccessful query.")
 
-    a.metric(
-        "API latency",
-        "Not connected"
-    )
+        return payload["data"]["result"]
 
-    b.metric(
-        "API error rate",
-        "Not connected"
-    )
+    def metric_value(promql, default=0.0):
+        result = query_prometheus(promql)
+        if not result:
+            return default
 
-    c.metric(
-        "Event throughput",
-        "Not connected"
-    )
+        value = float(result[0]["value"][1])
+        return value if pd.notna(value) else default
 
-    st.caption(
-        "Planned integrations: Prometheus, Grafana, "
-        "Alertmanager and Microsoft Teams."
-    )
+    try:
+        total_requests = metric_value(
+            "sum(rideanalytics_api_requests_total)"
+        )
+
+        average_latency_seconds = metric_value(
+            "sum(rate(rideanalytics_api_request_duration_seconds_sum[5m])) "
+            "/ "
+            "sum(rate(rideanalytics_api_request_duration_seconds_count[5m]))"
+        )
+
+        api_error_rate = metric_value(
+            '100 * sum(rate(rideanalytics_api_requests_total{http_status=~"5.."}[5m])) '
+            "/ "
+            "clamp_min(sum(rate(rideanalytics_api_requests_total[5m])), 0.000001)"
+        )
+
+        request_rate = metric_value(
+            "sum(rate(rideanalytics_api_requests_total[5m]))"
+        )
+
+        st.success("Connected to Prometheus")
+
+        metric_columns = st.columns(4)
+
+        metric_columns[0].metric(
+            "Total API requests",
+            f"{total_requests:,.0f}"
+        )
+        metric_columns[1].metric(
+            "Average API latency",
+            f"{average_latency_seconds * 1000:.2f} ms"
+        )
+        metric_columns[2].metric(
+            "API error rate",
+            f"{api_error_rate:.2f}%"
+        )
+        metric_columns[3].metric(
+            "API request rate",
+            f"{request_rate:.3f} req/sec"
+        )
+
+        st.divider()
+        st.subheader("API requests by endpoint and status")
+
+        breakdown = query_prometheus(
+            "sum by (endpoint, http_status) "
+            "(rideanalytics_api_requests_total)"
+        )
+
+        if breakdown:
+            breakdown_rows = [
+                {
+                    "Endpoint": item["metric"].get("endpoint", "unknown"),
+                    "HTTP status": item["metric"].get("http_status", "unknown"),
+                    "Requests": float(item["value"][1])
+                }
+                for item in breakdown
+            ]
+
+            st.dataframe(
+                pd.DataFrame(breakdown_rows),
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.info("No API request breakdown is available yet.")
+
+        st.caption(
+            "Live application metrics are collected by Prometheus from the "
+            "RideAnalytics Flask API. The dashboard refreshes every 5 seconds."
+        )
+
+        st.info(
+            "Event throughput is not displayed yet because the consumer does "
+            "not currently export an event-processing metric to Prometheus."
+        )
+
+    except (
+        requests.exceptions.RequestException,
+        ValueError,
+        KeyError,
+        IndexError,
+        TypeError
+    ) as error:
+        st.error(
+            "Unable to retrieve Prometheus metrics. Check that the Prometheus "
+            "port-forward is running locally, or that the in-cluster service "
+            "is reachable."
+        )
+        st.caption(str(error))
 
 
 # ==================================================
@@ -647,9 +849,7 @@ elif page == "Observability":
 st.divider()
 
 st.caption(
-    "RideOps Â· Streamlit dashboard Â· "
-    "Flask REST API Â· SQLite Â· "
+    "RideOps · Streamlit dashboard · "
+    "Flask REST API · SQLite · "
     "Auto-refresh: 5 seconds"
 )
-
-
